@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code d'autorisation</title>
+<style>
+  :root {
+    --fond: #faf9f7;
+    --carte: #ffffff;
+    --trait: #e3e0da;
+    --texte: #1f1d1a;
+    --doux: #6b655c;
+    --accent: #b4532a;
+    --ok: #2f7d4f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fond: #15140f;
+      --carte: #1e1c17;
+      --trait: #35312a;
+      --texte: #f2efe9;
+      --doux: #a39b8e;
+      --accent: #e08a5f;
+      --ok: #6cc08a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fond: #15140f; --carte: #1e1c17; --trait: #35312a;
+    --texte: #f2efe9; --doux: #a39b8e; --accent: #e08a5f; --ok: #6cc08a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fond); color: var(--texte);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 32px 16px;
+  }
+  .carte {
+    background: var(--carte); border: 1px solid var(--trait);
+    border-radius: 16px; padding: 32px; max-width: 620px; width: 100%;
+  }
+  h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sous { color: var(--doux); margin: 0 0 26px; font-size: 15px; }
+  .code {
+    font: 15px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--fond); border: 1px solid var(--trait);
+    border-radius: 10px; padding: 16px; word-break: break-all;
+    user-select: all; margin-bottom: 14px;
+  }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    background: var(--accent); color: #fff; border: 0;
+    border-radius: 10px; padding: 11px 20px;
+  }
+  button:hover { filter: brightness(1.07); }
+  .etat { margin-left: 12px; color: var(--ok); font-size: 14px; }
+  .note {
+    margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--trait);
+    color: var(--doux); font-size: 14px;
+  }
+  .erreur { color: var(--accent); font-weight: 600; }
+  ol { margin: 10px 0 0; padding-left: 20px; }
+  li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+  <div class="carte">
+    <h1 id="titre">Code d'autorisation</h1>
+    <p class="sous" id="sous">Recopie ce code dans le Terminal, il expire vite.</p>
+    <div class="code" id="code">Lecture…</div>
+    <button id="copier">Copier le code</button><span class="etat" id="etat"></span>
+    <div class="note" id="suite">
+      <strong>Quoi faire ensuite</strong>
+      <ol>
+        <li>Copie le code ci-dessus.</li>
+        <li>Retourne dans le Terminal et colle-le quand il te le demande.</li>
+        <li>Tu peux fermer cette page.</li>
+      </ol>
+      <p style="margin-top:14px">
+        Ce code est personnel et ne vaut que quelques minutes. Ne le partage
+        avec personne. Si tu as attendu trop longtemps, relance simplement
+        l'autorisation depuis le Terminal.
+      </p>
+    </div>
+  </div>
+<script>
+(function () {
+  var p = new URLSearchParams(window.location.search);
+  var code = p.get("code");
+  var erreur = p.get("error") || p.get("error_description");
+  var boite = document.getElementById("code");
+  var bouton = document.getElementById("copier");
+  var etat = document.getElementById("etat");
+  var suite = document.getElementById("suite");
+
+  if (erreur) {
+    suite.style.display = "none";
+    document.getElementById("titre").textContent = "Autorisation refusée";
+    document.getElementById("sous").textContent =
+      "TikTok n'a pas donné de code. Relance l'autorisation depuis le Terminal.";
+    boite.innerHTML = '<span class="erreur">' + erreur.replace(/[<>&]/g, "") + "</span>";
+    bouton.style.display = "none";
+    return;
+  }
+  if (!code) {
+    suite.style.display = "none";
+    document.getElementById("titre").textContent = "Rien à afficher";
+    document.getElementById("sous").textContent =
+      "Cette page ne sert qu'au retour de TikTok. Lance l'autorisation depuis le Terminal.";
+    boite.textContent = "—";
+    bouton.style.display = "none";
+    return;
+  }
+  boite.textContent = code;
+  bouton.addEventListener("click", function () {
+    function fini() { etat.textContent = "Copié"; setTimeout(function () { etat.textContent = ""; }, 2500); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(fini, manuel);
+    } else { manuel(); }
+    function manuel() {
+      var s = window.getSelection(); var r = document.createRange();
+      r.selectNodeContents(boite); s.removeAllRanges(); s.addRange(r);
+      etat.textContent = "Sélectionné, fais Cmd+C";
+    }
+  });
+})();
+</script>
+</body>
+</html>
